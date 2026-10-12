@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f5f6f8">
+<title>国际金价 → AU999 金价换算表（移动版）</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --card: #ffffff;
+    --border: #e2e5ea;
+    --text: #1f2430;
+    --muted: #6b7280;
+    --accent: #b8860b;
+    --accent-hover: #9c7209;
+    --danger: #c0392b;
+    --ok: #1f8a4c;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    padding:
+      calc(16px + env(safe-area-inset-top))
+      calc(16px + env(safe-area-inset-right))
+      calc(16px + env(safe-area-inset-bottom))
+      calc(16px + env(safe-area-inset-left));
+    font-family: "Segoe UI", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 16px; font-size: 12.5px; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 14px;
+  }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field + .field { margin-top: 12px; }
+  label { font-size: 12px; color: var(--muted); }
+
+  input[type="number"] {
+    height: 44px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    font-size: 16px;           /* 16px 可避免 iOS 聚焦时自动放大 */
+    background: #fff;
+    color: var(--text);
+    width: 100%;
+  }
+  input[readonly] { background: #f0f2f5; color: var(--muted); }
+  input:focus { outline: 2px solid rgba(184,134,11,.35); border-color: var(--accent); }
+
+  .row-inline { display: flex; gap: 8px; }
+  .row-inline input { flex: 1; min-width: 0; }
+
+  button {
+    border: none;
+    border-radius: 9px;
+    min-height: 44px;
+    padding: 0 16px;
+    font-size: 15px;
+    cursor: pointer;
+    background: #eceef1;
+    color: var(--text);
+    white-space: nowrap;
+    transition: background .15s;
+  }
+  button:active { background: #e0e3e8; }
+  button.primary { background: var(--accent); color: #fff; }
+  button.primary:active { background: var(--accent-hover); }
+  button:disabled { opacity: .55; cursor: not-allowed; }
+
+  .actions { margin-top: 14px; }
+  #generate { width: 100%; }
+  .status { display: block; margin-top: 10px; font-size: 12.5px; color: var(--muted); }
+  .status.err { color: var(--danger); }
+  .status.ok { color: var(--ok); }
+  .count { display: block; margin-top: 4px; font-size: 12.5px; color: var(--muted); }
+  .note { font-size: 12px; color: var(--muted); margin: 10px 0 0; }
+
+  .table-card { padding: 0; overflow: visible; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { padding: 11px 10px; text-align: center; border-bottom: 1px solid var(--border); }
+  th:first-child, td:first-child { border-right: 1px solid var(--border); }
+  th { font-size: 12px; color: var(--muted); font-weight: 600; }
+  thead th {
+    position: sticky;
+    top: 0;
+    background: var(--card);
+    z-index: 1;
+    box-shadow: 0 1px 0 var(--border);
+  }
+  thead th:first-child { border-top-left-radius: 12px; }
+  thead th:last-child { border-top-right-radius: 12px; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:last-child td:first-child { border-bottom-left-radius: 12px; }
+  tbody tr:last-child td:last-child { border-bottom-right-radius: 12px; }
+  tbody tr:nth-child(even) { background: #fafbfc; }
+  td.empty { color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>国际金价 → 国内 AU999 金价换算表</h1>
+  <p class="sub">公式：国内金价(元/克) = 国际金价(美元/盎司) ÷ 31.1035 × 美元兑人民币汇率</p>
+
+  <div class="card">
+    <div class="field">
+      <label for="startUSD">起始美元（美元/盎司）</label>
+      <input type="number" id="startUSD" value="4000" step="1" min="1" inputmode="decimal">
+    </div>
+    <div class="field">
+      <label for="endUSD">截止美元（美元/盎司）</label>
+      <input type="number" id="endUSD" value="6000" step="1" min="1" inputmode="decimal">
+    </div>
+    <div class="field">
+      <label for="stepUSD">每档（美元）</label>
+      <input type="number" id="stepUSD" value="30" step="1" min="1" inputmode="decimal">
+    </div>
+
+    <div class="field">
+      <label for="xauUsd">国际金价 XAU/USD（美元/盎司）</label>
+      <div class="row-inline">
+        <input type="number" id="xauUsd" readonly placeholder="获取中…" inputmode="decimal">
+        <button type="button" id="refreshXau">刷新</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="cnyRate">美元兑人民币 USD/CNY</label>
+      <div class="row-inline">
+        <input type="number" id="cnyRate" readonly placeholder="获取中…" inputmode="decimal">
+        <button type="button" id="refreshFx">刷新</button>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="primary" id="generate">生成表格</button>
+      <span class="status" id="status">就绪</span>
+      <span class="count" id="count"></span>
+    </div>
+    <p class="note">纯换算价，不含品牌溢价与工费；实际首饰零售价通常更高。</p>
+  </div>
+
+  <div class="card table-card">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:50%;">国际金价（美元/盎司）</th>
+          <th style="width:50%;">国内 AU999（元/克）</th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+        <tr><td colspan="2" class="empty">暂无数据</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+(function () {
+  const OZ_PER_GRAM = 31.1035;
+  const el = {
+    start: document.getElementById('startUSD'),
+    end: document.getElementById('endUSD'),
+    step: document.getElementById('stepUSD'),
+    xau: document.getElementById('xauUsd'),
+    fx: document.getElementById('cnyRate'),
+    status: document.getElementById('status'),
+    count: document.getElementById('count'),
+    tbody: document.getElementById('tbody'),
+    generate: document.getElementById('generate'),
+    refreshXau: document.getElementById('refreshXau'),
+    refreshFx: document.getElementById('refreshFx')
+  };
+
+  let lastXau = null;
+  let lastFx = null;
+
+  function setStatus(msg, cls) {
+    el.status.textContent = msg || '';
+    el.status.className = 'status' + (cls ? ' ' + cls : '');
+  }
+
+  async function fetchFx() {
+    const url = 'https://api.frankfurter.dev/v1/latest?base=USD&symbols=CNY';
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const rate = data && data.rates && data.rates.CNY;
+    if (!rate) throw new Error('返回数据缺少 CNY 汇率');
+    return { value: rate, date: data.date };
+  }
+
+  async function fetchXau() {
+    const url = 'https://api.gold-api.com/price/XAU';
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const price = data && data.price;
+    if (!price) throw new Error('返回数据缺少 XAU 金价');
+    return { value: price, date: (data.updatedAt || '').slice(0, 10) || '实时' };
+  }
+
+  async function loadXau() {
+    el.refreshXau.disabled = true;
+    setStatus('正在获取国际金价…');
+    try {
+      const r = await fetchXau();
+      lastXau = r.value;
+      el.xau.value = Number(r.value).toFixed(2);
+      setStatus('国际金价已更新（' + r.date + '）', 'ok');
+    } catch (e) {
+      setStatus('获取国际金价失败：' + e.message + '（可手动填入数值）', 'err');
+    } finally {
+      el.refreshXau.disabled = false;
+    }
+  }
+
+  async function loadFx() {
+    el.refreshFx.disabled = true;
+    setStatus('正在获取人民币汇率…');
+    try {
+      const r = await fetchFx();
+      lastFx = r.value;
+      el.fx.value = Number(r.value).toFixed(4);
+      setStatus('人民币汇率已更新（' + r.date + '）', 'ok');
+    } catch (e) {
+      setStatus('获取汇率失败：' + e.message + '（可手动填入数值）', 'err');
+    } finally {
+      el.refreshFx.disabled = false;
+    }
+  }
+
+  async function loadAll() {
+    setStatus('正在获取金价与汇率…');
+    try {
+      const [x, f] = await Promise.all([fetchXau(), fetchFx()]);
+      lastXau = x.value;
+      lastFx = f.value;
+      el.xau.value = Number(x.value).toFixed(2);
+      el.fx.value = Number(f.value).toFixed(4);
+      setStatus('金价与汇率已更新（' + f.date + '）', 'ok');
+    } catch (e) {
+      setStatus('获取失败：' + e.message + '（可手动填入数值）', 'err');
+    }
+  }
+
+  function generateTable() {
+    const start = Number(el.start.value);
+    const end = Number(el.end.value);
+    const step = Number(el.step.value);
+    const xauUsd = Number(el.xau.value);
+    const fx = Number(el.fx.value);
+
+    if (!isFinite(start) || !isFinite(end) || !isFinite(step)) {
+      setStatus('起始、截止、每档必须是有效数字', 'err');
+      return;
+    }
+    if (step <= 0) { setStatus('每档必须大于 0', 'err'); return; }
+    if (end < start) { setStatus('截止美元不能小于起始美元', 'err'); return; }
+    if (!isFinite(xauUsd) || xauUsd <= 0 || !isFinite(fx) || fx <= 0) {
+      setStatus('请先获取或填写国际金价和人民币汇率', 'err');
+      return;
+    }
+
+    const rows = [];
+    for (let usd = start; usd <= end + 1e-9; usd += step) {
+      const cny = (usd / OZ_PER_GRAM) * fx;
+      rows.push(
+        '<tr><td>' + formatUsd(usd) + '</td>' +
+        '<td>' + cny.toFixed(2) + '</td></tr>'
+      );
+    }
+
+    el.tbody.innerHTML = rows.join('');
+    el.count.textContent = '共 ' + rows.length + ' 档';
+    setStatus('表格已生成（金价 ' + xauUsd + ' USD/oz，汇率 ' + fx + '）', 'ok');
+  }
+
+  function formatUsd(v) {
+    const n = Math.round(v * 100) / 100;
+    return Number.isInteger(n) ? String(n) : n.toFixed(2);
+  }
+
+  el.generate.addEventListener('click', generateTable);
+  el.refreshXau.addEventListener('click', loadXau);
+  el.refreshFx.addEventListener('click', loadFx);
+  [el.start, el.end, el.step].forEach(function (input) {
+    input.addEventListener('change', generateTable);
+  });
+
+  loadAll().then(generateTable).catch(function () { generateTable(); });
+})();
+</script>
+</body>
+</html>
